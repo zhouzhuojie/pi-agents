@@ -1,5 +1,5 @@
 ---
-name: commit-messages
+name: write-commit
 description: Write well-structured commit messages.
 ---
 
@@ -32,17 +32,21 @@ Fixes #123
 ## Examples
 
 Subject-only (trivial changes):
+
 ```
 Fix typo in README
 ```
+
 ```
 Rename auth module to authentication
 ```
+
 ```
 Add input validation for email field
 ```
 
 With body (complex changes):
+
 ```
 Refactor authentication to use JWT
 

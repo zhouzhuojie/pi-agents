@@ -1,5 +1,5 @@
 ---
-name: hexdocs
+name: search-hexdocs
 description: Search Hex package documentation for Elixir/Erlang.
 compatibility: Requires Node.js 18+. Run `npm install` in {baseDir}/scripts first.
 ---

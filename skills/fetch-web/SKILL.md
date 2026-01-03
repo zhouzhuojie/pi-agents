@@ -1,5 +1,5 @@
 ---
-name: web
+name: fetch-web
 description: Fetch web pages, scrape content, fill forms, take screenshots.
 compatibility: Requires Node.js 18+, Chrome/Chromium. Run `npm install` in {baseDir}/scripts first.
 ---

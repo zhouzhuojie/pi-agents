@@ -1,5 +1,5 @@
 ---
-name: ai-docs
+name: write-docs
 description: Write AI-scannable technical documentation.
 ---
 
