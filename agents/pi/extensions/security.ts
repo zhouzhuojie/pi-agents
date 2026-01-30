@@ -57,10 +57,7 @@ export default function (pi: ExtensionAPI) {
             return { block: true, reason: `Blocked ${desc} (no UI to confirm)` };
           }
 
-          const ok = await ctx.ui.confirm(
-            `⚠️ Dangerous command: ${desc}`,
-            command
-          );
+          const ok = await ctx.ui.confirm(`⚠️ Dangerous command: ${desc}`, command);
 
           if (!ok) {
             return { block: true, reason: `Blocked ${desc} by user` };
@@ -98,7 +95,7 @@ export default function (pi: ExtensionAPI) {
 
           const ok = await ctx.ui.confirm(
             `⚠️ Modifying ${desc}`,
-            `Are you sure you want to modify ${filePath}?`
+            `Are you sure you want to modify ${filePath}?`,
           );
 
           if (!ok) {

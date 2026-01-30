@@ -11,14 +11,24 @@ export default function (pi: ExtensionAPI) {
     { pattern: /\b(gho_[a-zA-Z0-9]{36,})\b/g, replacement: "[GITHUB_OAUTH_REDACTED]" }, // gho_xxxx...
     { pattern: /\b(xox[baprs]-[a-zA-Z0-9-]{10,})\b/g, replacement: "[SLACK_TOKEN_REDACTED]" }, // xoxb-xxx, xoxp-xxx
     { pattern: /\b(AKIA[A-Z0-9]{16})\b/g, replacement: "[AWS_KEY_REDACTED]" }, // AKIAIOSFODNN7EXAMPLE
-    { pattern: /\b(api[_-]?key|apikey)\s*[=:]\s*['"]?([a-zA-Z0-9_-]{20,})['"]?/gi, replacement: "$1=[REDACTED]" }, // api_key=xxx, apiKey: "xxx"
-    { pattern: /\b(secret|token|password|passwd|pwd)\s*[=:]\s*['"]?([^\s'"]{8,})['"]?/gi, replacement: "$1=[REDACTED]" }, // password=xxx, secret: "xxx"
+    {
+      pattern: /\b(api[_-]?key|apikey)\s*[=:]\s*['"]?([a-zA-Z0-9_-]{20,})['"]?/gi,
+      replacement: "$1=[REDACTED]",
+    }, // api_key=xxx, apiKey: "xxx"
+    {
+      pattern: /\b(secret|token|password|passwd|pwd)\s*[=:]\s*['"]?([^\s'"]{8,})['"]?/gi,
+      replacement: "$1=[REDACTED]",
+    }, // password=xxx, secret: "xxx"
     { pattern: /\b(bearer)\s+([a-zA-Z0-9._-]{20,})\b/gi, replacement: "Bearer [REDACTED]" }, // Bearer eyJhbGc...
     { pattern: /(mongodb(\+srv)?:\/\/[^:]+:)[^@]+(@)/gi, replacement: "$1[REDACTED]$3" }, // mongodb://user:pass@host
     { pattern: /(postgres(ql)?:\/\/[^:]+:)[^@]+(@)/gi, replacement: "$1[REDACTED]$3" }, // postgresql://user:pass@host
     { pattern: /(mysql:\/\/[^:]+:)[^@]+(@)/gi, replacement: "$1[REDACTED]$3" }, // mysql://user:pass@host
     { pattern: /(redis:\/\/[^:]+:)[^@]+(@)/gi, replacement: "$1[REDACTED]$3" }, // redis://user:pass@host
-    { pattern: /-----BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY-----[\s\S]*?-----END \1PRIVATE KEY-----/g, replacement: "[PRIVATE_KEY_REDACTED]" }, // -----BEGIN RSA PRIVATE KEY-----...
+    {
+      pattern:
+        /-----BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY-----[\s\S]*?-----END \1PRIVATE KEY-----/g,
+      replacement: "[PRIVATE_KEY_REDACTED]",
+    }, // -----BEGIN RSA PRIVATE KEY-----...
   ];
 
   const sensitiveFiles = [
@@ -33,7 +43,9 @@ export default function (pi: ExtensionAPI) {
     if (event.isError) return undefined;
 
     // Extract text from content array
-    const textContent = event.content.find((c): c is { type: "text"; text: string } => c.type === "text");
+    const textContent = event.content.find(
+      (c): c is { type: "text"; text: string } => c.type === "text",
+    );
     if (!textContent) return undefined;
 
     let result = textContent.text;
@@ -47,7 +59,9 @@ export default function (pi: ExtensionAPI) {
       for (const pattern of sensitiveFiles) {
         if (pattern.test(filePath)) {
           ctx.ui.notify(`🔒 Redacted contents of sensitive file: ${filePath}`, "info");
-          return { content: [{ type: "text", text: `[Contents of ${filePath} redacted for security]` }] };
+          return {
+            content: [{ type: "text", text: `[Contents of ${filePath} redacted for security]` }],
+          };
         }
       }
     }

@@ -1,9 +1,13 @@
 import type { ExtensionAPI, LoadSkillsResult } from "@mariozechner/pi-coding-agent";
-import { CustomEditor, getSelectListTheme, loadSkills, SettingsManager } from "@mariozechner/pi-coding-agent";
+import {
+  CustomEditor,
+  getSelectListTheme,
+  loadSkills,
+  SettingsManager,
+} from "@mariozechner/pi-coding-agent";
 import { fuzzyFilter, Key, matchesKey, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 
 type SkillInfo = Pick<LoadSkillsResult["skills"][number], "name" | "description" | "filePath">;
-
 
 interface DollarContext {
   prefix: string;
@@ -20,7 +24,10 @@ function buildSkillIndex(cwd: string): SkillInfo[] {
   return result.skills.slice();
 }
 
-function findDollarContext(text: string, cursor: { line: number; col: number }): DollarContext | null {
+function findDollarContext(
+  text: string,
+  cursor: { line: number; col: number },
+): DollarContext | null {
   const lines = text.split("\n");
   const lineText = lines[cursor.line] ?? "";
   const prefix = lineText.slice(0, cursor.col);
@@ -34,7 +41,7 @@ function renderSkillSuggestions(
   width: number,
   matches: SkillInfo[],
   selectedIndex: number,
-  theme: ReturnType<typeof getSelectListTheme>
+  theme: ReturnType<typeof getSelectListTheme>,
 ): string[] {
   const lines: string[] = [];
   if (matches.length === 0) return lines;
@@ -51,7 +58,10 @@ function renderSkillSuggestions(
   };
 
   const maxVisible = Math.min(matches.length, MAX_SUGGESTIONS);
-  const startIndex = Math.max(0, Math.min(selectedIndex - Math.floor(maxVisible / 2), matches.length - maxVisible));
+  const startIndex = Math.max(
+    0,
+    Math.min(selectedIndex - Math.floor(maxVisible / 2), matches.length - maxVisible),
+  );
   const endIndex = Math.min(startIndex + maxVisible, matches.length);
 
   for (let i = startIndex; i < endIndex; i++) {
@@ -61,7 +71,9 @@ function renderSkillSuggestions(
     const isSelected = i === selectedIndex;
     const prefix = isSelected ? theme.selectedPrefix("→ ") : "  ";
     const prefixWidth = visibleWidth(prefix);
-    const descriptionSingleLine = skill.description ? normalizeToSingleLine(skill.description) : undefined;
+    const descriptionSingleLine = skill.description
+      ? normalizeToSingleLine(skill.description)
+      : undefined;
     const rawValue = `$${skill.name}`;
     const maxValueWidth = Math.min(30, width - prefixWidth - 4);
     const value = renderValue(rawValue, maxValueWidth, isSelected);
@@ -99,7 +111,7 @@ class SkillSuggestEditor extends CustomEditor {
     theme: ConstructorParameters<typeof CustomEditor>[1],
     keybindings: ConstructorParameters<typeof CustomEditor>[2],
     getSkills: () => SkillInfo[],
-    setWidget: (data: { matches: SkillInfo[]; selectedIndex: number } | undefined) => void
+    setWidget: (data: { matches: SkillInfo[]; selectedIndex: number } | undefined) => void,
   ) {
     super(tui, theme, keybindings);
     this.getSkills = getSkills;
@@ -110,7 +122,9 @@ class SkillSuggestEditor extends CustomEditor {
     if (this.suggestionPrefix !== null && this.suggestionMatches.length > 0) {
       if (matchesKey(data, Key.up)) {
         this.selectedIndex =
-          this.selectedIndex === 0 ? Math.max(0, this.suggestionMatches.length - 1) : this.selectedIndex - 1;
+          this.selectedIndex === 0
+            ? Math.max(0, this.suggestionMatches.length - 1)
+            : this.selectedIndex - 1;
         this.updateWidget();
         return;
       }
@@ -178,7 +192,9 @@ class SkillSuggestEditor extends CustomEditor {
     const prefixChanged = prefix !== this.suggestionPrefix;
     this.suggestionPrefix = prefix;
     this.suggestionMatches = matches;
-    this.selectedIndex = prefixChanged ? 0 : Math.min(this.selectedIndex, this.suggestionMatches.length - 1);
+    this.selectedIndex = prefixChanged
+      ? 0
+      : Math.min(this.selectedIndex, this.suggestionMatches.length - 1);
     this.updateWidget();
   }
 
@@ -237,11 +253,12 @@ export default function (pi: ExtensionAPI) {
           () => {
             const selectListTheme = getSelectListTheme();
             return {
-              render: (width: number) => renderSkillSuggestions(width, data.matches, data.selectedIndex, selectListTheme),
+              render: (width: number) =>
+                renderSkillSuggestions(width, data.matches, data.selectedIndex, selectListTheme),
               invalidate: () => undefined,
             };
           },
-          { placement: "belowEditor" }
+          { placement: "belowEditor" },
         );
       };
 
@@ -259,7 +276,8 @@ export default function (pi: ExtensionAPI) {
     return {
       message: {
         customType: "skill-dollar",
-        content: "Use a skill when the user names it (with `$skill-name` or plain text) or the request matches its description, and say if it is missing or unreadable.",
+        content:
+          "Use a skill when the user names it (with `$skill-name` or plain text) or the request matches its description, and say if it is missing or unreadable.",
         display: true,
       },
     };

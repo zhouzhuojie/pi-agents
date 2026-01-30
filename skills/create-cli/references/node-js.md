@@ -120,7 +120,7 @@ async function main() {
   log("Done");
 }
 
-main().catch(err => {
+main().catch((err) => {
   process.stderr.write(`${NAME}: ${err.message}${err.cause ? ` (${err.cause.message})` : ""}\n`);
   process.exit(1);
 });
