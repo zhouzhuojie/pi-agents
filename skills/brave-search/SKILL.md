@@ -1,7 +1,7 @@
 ---
 name: brave-search
 description: Web search via the Brave Search API. Use to retrieve search results from Brave when web lookups are needed.
-compatibility: Requires BRAVE_SEARCH_API_KEY and uv with Python 3.12+ for scripts/brave-search.py.
+compatibility: Requires BRAVE_SEARCH_API_KEY and uv with Python 3.12+.
 ---
 
 # Brave Search
