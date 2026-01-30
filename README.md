@@ -37,6 +37,12 @@ ln -sf {baseDir}/skills {workspaceDir}/.claude/skills
 
 Skills provide specialized instructions for specific tasks. They follow the [Agent Skills Specification](https://agentskills.io/specification).
 
+## pi extensions
+
+- `filter-output.ts`: redacts sensitive data from tool output before the model sees it.
+- `security.ts`: blocks dangerous bash commands and protected file writes.
+- `skill-dollar.ts`: suggests `$skill-name` completions in the editor and injects skill usage guidance when mentioned. Idea from Codex.
+
 ## Credits
 
 - [badlogic/pi-skills](https://github.com/badlogic/pi-skills)
