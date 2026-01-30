@@ -17,7 +17,7 @@ const normalizeToSingleLine = (text: string) => text.replace(/[\r\n]+/g, " ").tr
 function buildSkillIndex(cwd: string): SkillInfo[] {
   const settings = SettingsManager.create(cwd);
   const result: LoadSkillsResult = loadSkills({ cwd, skillPaths: settings.getSkillPaths() });
-  return result.skills.slice().sort((a, b) => a.name.localeCompare(b.name));
+  return result.skills.slice();
 }
 
 function findDollarContext(text: string, cursor: { line: number; col: number }): DollarContext | null {
