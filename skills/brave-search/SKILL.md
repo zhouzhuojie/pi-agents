@@ -1,23 +1,15 @@
 ---
 name: brave-search
 description: Web search via the Brave Search API. Use to retrieve search results from Brave when web lookups are needed.
-compatibility: Requires BRAVE_SEARCH_API_KEY and uv with Python 3.12+.
+compatibility: Requires env. variable BRAVE_SEARCH_API_KEY and uv with Python 3.12+.
 ---
 
 # Brave Search
 
-## Quick start
-
-```bash
-export BRAVE_SEARCH_API_KEY="your-token"
-{baseDir}/scripts/brave-search.py "pi coding agent" --search-lang en --country US
-```
-
 ## Usage
 
 ```bash
-{baseDir}/scripts/brave-search.py "QUERY" [OPTIONS]
-uv run --script {baseDir}/scripts/brave-search.py "QUERY" [OPTIONS]
+uv run --script {thisSkillDir}/scripts/brave-search.py "QUERY" [OPTIONS] --json
 ```
 
 ## Options
@@ -32,14 +24,8 @@ uv run --script {baseDir}/scripts/brave-search.py "QUERY" [OPTIONS]
 - `--raw`: Output raw API response
 - `--help`: Show help
 
-## Environment variables
-
-```bash
-BRAVE_SEARCH_API_KEY="your-token"
-```
-
 ## Examples
 
 ```bash
-{baseDir}/scripts/brave-search.py "observability tools" --count 3
+uv run --script {thisSkillDir}/scripts/brave-search.py "observability tools" --count 3 --json
 ```
