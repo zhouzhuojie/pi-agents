@@ -1,6 +1,6 @@
 ---
 name: gogcli
-description: CLI for Gmail, Calendar, Drive, Contacts, Tasks, Sheets.
+description: Google Workspace automation via gogcli for Gmail, Calendar, Drive, Contacts, Tasks, and Sheets. Use when managing Google Workspace data.
 compatibility: Requires gog CLI (github.com/steipete/gogcli). Set GOG_ACCOUNT=you@gmail.com or use --account flag.
 ---
 

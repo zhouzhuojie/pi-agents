@@ -1,6 +1,6 @@
 ---
 name: rohlik-grocery
-description: Grocery shopping via Rohlik.cz.
+description: Shop on Rohlik.cz via MCPorter. Use to search products, manage cart, and place orders with explicit confirmation.
 compatibility: Requires Node.js, MCPorter, and Rohlik.cz credentials (RHL_EMAIL, RHL_PASS).
 ---
 

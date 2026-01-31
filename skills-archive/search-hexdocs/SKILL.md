@@ -1,6 +1,6 @@
 ---
 name: search-hexdocs
-description: Search Hex package documentation for Elixir/Erlang.
+description: Search HexDocs documentation for Elixir and Erlang packages. Use when looking up package APIs or guides.
 compatibility: Requires Node.js 18+. 
 ---
 

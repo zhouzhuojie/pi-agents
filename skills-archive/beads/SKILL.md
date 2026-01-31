@@ -1,6 +1,6 @@
 ---
 name: beads
-description: Persistent task memory using dependency graphs. For multi-session work that must survive compaction.
+description: Persistent task tracking with dependency graphs via bd CLI. Use for multi session work that must survive compaction.
 compatibility: Requires bd CLI v0.34.0+ and git repository.
 ---
 

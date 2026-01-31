@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Read this skill before making git commits
+description: Create git commits using Conventional Commits format. Use when the user asks to commit changes or wants help crafting a commit message.
 license: Apache-2.0 (see https://github.com/mitsuhiko/agent-stuff)
 ---
 
