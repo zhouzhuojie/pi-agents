@@ -253,7 +253,7 @@ export default function (pi: ExtensionAPI) {
       message: {
         customType: "skill-dollar",
         content:
-          "Use a skill when the user includes `$skill-name`. Say if it is missing or unreadable.",
+          "Use every `$skill-name` mentioned in the prompt. If any are missing or unreadable, say so.",
         display: true,
       },
     };
