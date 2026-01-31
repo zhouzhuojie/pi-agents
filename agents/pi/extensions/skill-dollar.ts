@@ -7,14 +7,14 @@ import {
 } from "@mariozechner/pi-coding-agent";
 import { fuzzyFilter, Key, matchesKey, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 
-type SkillInfo = Pick<LoadSkillsResult["skills"][number], "name" | "description" | "filePath">;
+type SkillInfo = Pick<LoadSkillsResult["skills"][number], "name" | "description" | "source">;
 
 interface DollarContext {
   prefix: string;
 }
 
 const WIDGET_ID = "skill-dollar-suggest";
-const MAX_SUGGESTIONS = 8;
+const MAX_SUGGESTIONS = 5;
 
 const normalizeToSingleLine = (text: string) => text.replace(/[\r\n]+/g, " ").trim();
 
@@ -46,15 +46,13 @@ function renderSkillSuggestions(
   const lines: string[] = [];
   if (matches.length === 0) return lines;
 
-  const renderValue = (rawValue: string, maxWidth: number, isSelected: boolean) => {
-    const truncatedRaw = truncateToWidth(rawValue, maxWidth, "");
-    const hasDollar = truncatedRaw.startsWith("$");
-    const dollarPart = hasDollar ? "$" : "";
-    const namePart = hasDollar ? truncatedRaw.slice(1) : truncatedRaw;
-    const text = isSelected
-      ? `${theme.description(dollarPart)}${theme.selectedText(namePart)}`
-      : `${theme.description(dollarPart)}${namePart}`;
-    return { text, width: visibleWidth(truncatedRaw) };
+  const renderValue = (name: string, source: string, maxWidth: number, isSelected: boolean) => {
+    const sourceWidth = 1 + visibleWidth(source);
+    const availableWidth = Math.max(0, maxWidth - 1 - sourceWidth);
+    const truncatedName = truncateToWidth(name, availableWidth, "");
+    const nameText = isSelected ? theme.selectedText(truncatedName) : truncatedName;
+    const text = `${theme.description("$")}${nameText}${theme.description(` (${source})`)}`;
+    return { text, width: 1 + visibleWidth(truncatedName) + sourceWidth };
   };
 
   const maxVisible = Math.min(matches.length, MAX_SUGGESTIONS);
@@ -71,26 +69,25 @@ function renderSkillSuggestions(
     const isSelected = i === selectedIndex;
     const prefix = isSelected ? theme.selectedPrefix("→ ") : "  ";
     const prefixWidth = visibleWidth(prefix);
-    const descriptionSingleLine = skill.description
-      ? normalizeToSingleLine(skill.description)
-      : undefined;
-    const rawValue = `$${skill.name}`;
-    const maxValueWidth = Math.min(30, width - prefixWidth - 4);
-    const value = renderValue(rawValue, maxValueWidth, isSelected);
+    const descriptionSingleLine = normalizeToSingleLine(skill.description);
+    const columnWidth = Math.max(0, Math.min(32, width - prefixWidth - 2));
+    const value = renderValue(skill.name, skill.source, columnWidth, isSelected);
+    const spacing = " ".repeat(Math.max(1, columnWidth - value.width));
+    const remainingWidth = width - prefixWidth - columnWidth - 1;
 
-    if (descriptionSingleLine && width > 40) {
-      const spacing = " ".repeat(Math.max(1, 32 - value.width));
-      const descriptionStart = prefixWidth + value.width + spacing.length;
-      const remainingWidth = width - descriptionStart - 2;
-      if (remainingWidth > 10) {
-        const truncatedDesc = truncateToWidth(descriptionSingleLine, remainingWidth, "");
-        lines.push(prefix + value.text + theme.description(spacing + truncatedDesc));
-        continue;
-      }
+    if (remainingWidth > 5) {
+      const truncatedDesc = truncateToWidth(descriptionSingleLine, remainingWidth, "");
+      const line = prefix + value.text + spacing + theme.description(truncatedDesc);
+      lines.push(truncateToWidth(line, width, ""));
+      continue;
     }
 
-    const fallback = renderValue(rawValue, width - prefixWidth - 2, isSelected);
-    lines.push(prefix + fallback.text);
+    const line = prefix + value.text;
+    lines.push(truncateToWidth(line, width, ""));
+  }
+
+  while (lines.length < MAX_SUGGESTIONS) {
+    lines.push(" ");
   }
 
   const scrollText = `  (${selectedIndex + 1}/${matches.length})`;
@@ -100,7 +97,7 @@ function renderSkillSuggestions(
 }
 
 class SkillSuggestEditor extends CustomEditor {
-  private getSkills: () => SkillInfo[];
+  private skills: SkillInfo[];
   private setWidget: (data: { matches: SkillInfo[]; selectedIndex: number } | undefined) => void;
   private suggestionPrefix: string | null = null;
   private suggestionMatches: SkillInfo[] = [];
@@ -110,11 +107,11 @@ class SkillSuggestEditor extends CustomEditor {
     tui: ConstructorParameters<typeof CustomEditor>[0],
     theme: ConstructorParameters<typeof CustomEditor>[1],
     keybindings: ConstructorParameters<typeof CustomEditor>[2],
-    getSkills: () => SkillInfo[],
+    skills: SkillInfo[],
     setWidget: (data: { matches: SkillInfo[]; selectedIndex: number } | undefined) => void,
   ) {
     super(tui, theme, keybindings);
-    this.getSkills = getSkills;
+    this.skills = skills;
     this.setWidget = setWidget;
   }
 
@@ -169,7 +166,7 @@ class SkillSuggestEditor extends CustomEditor {
   }
 
   private updateSuggestions(): void {
-    const skills = this.getSkills();
+    const skills = this.skills;
     if (skills.length === 0) {
       this.clearSuggestions();
       return;
@@ -215,29 +212,11 @@ class SkillSuggestEditor extends CustomEditor {
   }
 }
 
-function extractSkillMentions(text: string, skills: SkillInfo[]): SkillInfo[] {
-  const byName = new Map(skills.map((skill) => [skill.name.toLowerCase(), skill]));
-  const matches = new Set<string>();
-  const regex = /\$([a-z0-9][a-z0-9-]{0,63})/g;
-  let match: RegExpExecArray | null = regex.exec(text);
-  while (match) {
-    const name = match[1].toLowerCase();
-    if (byName.has(name)) matches.add(name);
-    match = regex.exec(text);
-  }
-
-  return [...matches].map((name) => byName.get(name)!).filter(Boolean);
-}
-
 export default function (pi: ExtensionAPI) {
   let skills: SkillInfo[] = [];
 
-  const refreshSkills = async (cwd: string) => {
-    skills = buildSkillIndex(cwd);
-  };
-
   pi.on("session_start", async (_event, ctx) => {
-    await refreshSkills(ctx.cwd);
+    skills = buildSkillIndex(ctx.cwd);
 
     if (!ctx.hasUI) return;
 
@@ -262,22 +241,19 @@ export default function (pi: ExtensionAPI) {
         );
       };
 
-      return new SkillSuggestEditor(tui, theme, keybindings, () => skills, setWidget);
+      return new SkillSuggestEditor(tui, theme, keybindings, skills, setWidget);
     });
   });
 
-  pi.on("before_agent_start", async (event, ctx) => {
-    if (skills.length === 0) {
-      await refreshSkills(ctx.cwd);
-    }
+  const hasSkillMention = (text: string) => /\$[a-z0-9][a-z0-9-]{0,63}/.test(text);
 
-    const mentioned = extractSkillMentions(event.prompt, skills);
-    if (mentioned.length === 0) return undefined;
+  pi.on("before_agent_start", async (event) => {
+    if (!hasSkillMention(event.prompt)) return undefined;
     return {
       message: {
         customType: "skill-dollar",
         content:
-          "Use a skill when the user names it (with `$skill-name` or plain text) or the request matches its description, and say if it is missing or unreadable.",
+          "Use a skill when the user includes `$skill-name`. Say if it is missing or unreadable.",
         display: true,
       },
     };
