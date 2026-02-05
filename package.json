@@ -4,7 +4,9 @@
   "description": "Custom agents extensions and skills.",
   "type": "module",
   "keywords": [
-    "pi-package"
+    "pi-package",
+    "pi-extension",
+    "pi-skill"
   ],
   "license": "MIT-0",
   "files": [
@@ -14,13 +16,15 @@
   ],
   "pi": {
     "extensions": [
-      "./agents/pi/extensions/skill-dollar.ts"
+      "./agents/pi/extensions"
+    ],
+    "skills": [
+      "./skills"
     ]
   },
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*",
     "@mariozechner/pi-ai": "*",
-    "@mariozechner/pi-tui": "*",
-    "@sinclair/typebox": "*"
+    "@mariozechner/pi-tui": "*"
   }
 }
