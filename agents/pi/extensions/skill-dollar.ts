@@ -10,11 +10,15 @@ import { fuzzyFilter, Key, matchesKey, truncateToWidth, visibleWidth } from "@ma
 type SkillInfo = Pick<LoadSkillsResult["skills"][number], "name" | "description" | "source">;
 
 interface DollarContext {
-  prefix: string;
+  query: string;
 }
 
 const WIDGET_ID = "skill-dollar-suggest";
 const MAX_SUGGESTIONS = 5;
+const MAX_SKILL_NAME_LENGTH = 64;
+const SKILL_NAME_PATTERN = "[a-z0-9]+(?:-[a-z0-9]+)*";
+const SKILL_MENTION_REGEX = new RegExp(`\\$(${SKILL_NAME_PATTERN})`, "g");
+const SKILL_QUERY_REGEX = new RegExp(`\\$([a-z0-9-]{0,${MAX_SKILL_NAME_LENGTH}})$`);
 
 const normalizeToSingleLine = (text: string) => text.replace(/[\r\n]+/g, " ").trim();
 
@@ -30,11 +34,11 @@ function findDollarContext(
 ): DollarContext | null {
   const lines = text.split("\n");
   const lineText = lines[cursor.line] ?? "";
-  const prefix = lineText.slice(0, cursor.col);
-  const match = prefix.match(/\$([a-z0-9-]{0,63})$/);
+  const linePrefix = lineText.slice(0, cursor.col);
+  const match = linePrefix.match(SKILL_QUERY_REGEX);
   if (!match) return null;
 
-  return { prefix: match[1] };
+  return { query: match[1] };
 }
 
 function renderSkillSuggestions(
@@ -99,7 +103,7 @@ function renderSkillSuggestions(
 class SkillSuggestEditor extends CustomEditor {
   private skills: SkillInfo[];
   private setWidget: (data: { matches: SkillInfo[]; selectedIndex: number } | undefined) => void;
-  private suggestionPrefix: string | null = null;
+  private suggestionQuery: string | null = null;
   private suggestionMatches: SkillInfo[] = [];
   private selectedIndex = 0;
 
@@ -116,7 +120,7 @@ class SkillSuggestEditor extends CustomEditor {
   }
 
   handleInput(data: string): void {
-    if (this.suggestionPrefix !== null && this.suggestionMatches.length > 0) {
+    if (this.suggestionQuery !== null && this.suggestionMatches.length > 0) {
       if (matchesKey(data, Key.up)) {
         this.selectedIndex =
           this.selectedIndex === 0
@@ -150,13 +154,13 @@ class SkillSuggestEditor extends CustomEditor {
 
   private applySelection(): void {
     const selection = this.suggestionMatches[this.selectedIndex];
-    if (this.suggestionPrefix === null || !selection) {
+    if (this.suggestionQuery === null || !selection) {
       this.clearSuggestions();
       return;
     }
 
-    const prefixLength = this.suggestionPrefix.length;
-    for (let i = 0; i < prefixLength; i++) {
+    const queryLength = this.suggestionQuery.length;
+    for (let i = 0; i < queryLength; i++) {
       super.handleInput("\x7f");
     }
 
@@ -178,25 +182,25 @@ class SkillSuggestEditor extends CustomEditor {
       return;
     }
 
-    const prefix = context.prefix;
-    const matches = prefix ? fuzzyFilter(skills, prefix, (skill) => skill.name) : skills;
+    const query = context.query;
+    const matches = query ? fuzzyFilter(skills, query, (skill) => skill.name) : skills;
 
     if (matches.length === 0) {
       this.clearSuggestions();
       return;
     }
 
-    const prefixChanged = prefix !== this.suggestionPrefix;
-    this.suggestionPrefix = prefix;
+    const queryChanged = query !== this.suggestionQuery;
+    this.suggestionQuery = query;
     this.suggestionMatches = matches;
-    this.selectedIndex = prefixChanged
+    this.selectedIndex = queryChanged
       ? 0
       : Math.min(this.selectedIndex, this.suggestionMatches.length - 1);
     this.updateWidget();
   }
 
   private updateWidget(): void {
-    if (this.suggestionPrefix === null || this.suggestionMatches.length === 0) {
+    if (this.suggestionQuery === null || this.suggestionMatches.length === 0) {
       this.setWidget(undefined);
       return;
     }
@@ -205,7 +209,7 @@ class SkillSuggestEditor extends CustomEditor {
   }
 
   private clearSuggestions(): void {
-    this.suggestionPrefix = null;
+    this.suggestionQuery = null;
     this.suggestionMatches = [];
     this.selectedIndex = 0;
     this.setWidget(undefined);
@@ -245,7 +249,13 @@ export default function (pi: ExtensionAPI) {
     });
   });
 
-  const hasSkillMention = (text: string) => /\$[a-z0-9][a-z0-9-]{0,63}/.test(text);
+  const hasSkillMention = (text: string) => {
+    for (const match of text.matchAll(SKILL_MENTION_REGEX)) {
+      if ((match[1]?.length ?? 0) <= MAX_SKILL_NAME_LENGTH) return true;
+    }
+
+    return false;
+  };
 
   pi.on("before_agent_start", async (event) => {
     if (!hasSkillMention(event.prompt)) return undefined;
