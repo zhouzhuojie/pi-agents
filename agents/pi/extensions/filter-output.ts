@@ -16,9 +16,9 @@ export default function (pi: ExtensionAPI) {
       replacement: "$1=[REDACTED]",
     }, // api_key=xxx, apiKey: "xxx"
     {
-      pattern: /\b(secret|token|password|passwd|pwd)\s*[=:]\s*['"]?([^\s'"]{8,})['"]?/gi,
+      pattern: /\b(secret|token|password|passwd|pwd|pass)\s*[=:]\s*['"]?([^\s'"]{8,})['"]?/gi,
       replacement: "$1=[REDACTED]",
-    }, // password=xxx, secret: "xxx"
+    }, // password=xxx, secret: "xxx", pass=xxx
     { pattern: /\b(bearer)\s+([a-zA-Z0-9._-]{20,})\b/gi, replacement: "Bearer [REDACTED]" }, // Bearer eyJhbGc...
     { pattern: /(mongodb(\+srv)?:\/\/[^:]+:)[^@]+(@)/gi, replacement: "$1[REDACTED]$3" }, // mongodb://user:pass@host
     { pattern: /(postgres(ql)?:\/\/[^:]+:)[^@]+(@)/gi, replacement: "$1[REDACTED]$3" }, // postgresql://user:pass@host
